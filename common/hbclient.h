@@ -14,7 +14,9 @@ public:
              hb_client_sla_t sla);
     ~HBClient() override;
 
-    int getFd() override;
+    int      getFd() override;
+    bool     clientRegistered();
+    void     registerWithServer();
     uint64_t readData() override;
 
 private:
@@ -24,6 +26,7 @@ private:
     hb_client_sla_t    m_sla;
     //struct sockaddr_un client_sock_addr, server_sock_addr;
     uint32_t           m_pid;
+    bool               m_registerStatus;
 };
 
 }

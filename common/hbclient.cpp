@@ -18,8 +18,6 @@ HBClient::HBClient(string appName,
                    hb_client_sla_t sla) :
     Selectable(), m_appName(appName), m_socket(0), m_sla(sla)
 {
-    ssize_t ret;
-
     if ((m_socket = socket(AF_UNIX, SOCK_DGRAM, 0)) < 0)
     {
         SWSS_LOG_ERROR("Unable to create HB Client socket");
@@ -28,6 +26,7 @@ HBClient::HBClient(string appName,
     }
 
     m_pid = getpid();
+    m_registerStatus = false;
     memset (&client_sock_addr, 0, sizeof(struct sockaddr_un));
     client_sock_addr.sun_family = AF_UNIX;
     sprintf (client_sock_addr.sun_path, "/tmp/hbclient-%s-%u", m_appName.c_str(), m_pid);
@@ -57,25 +56,10 @@ HBClient::HBClient(string appName,
     message.version = HB_VERSION_1_0;
     strncpy(message.process_name, m_appName.c_str(), sizeof(message.process_name));
     message.process_pid = getpid();
-
-    message.msg_type = HB_CLIENT_REGISTER;
-
     /* Fill the Client SLA */
     message.sla = m_sla;
-    do
-    {
-      ret = sendto(m_socket, (void *) &message, sizeof(message), 0,
-                   (struct sockaddr *) &server_sock_addr, sizeof(server_sock_addr));
-    }
-    while ((ret < 0) && (errno == EINTR));
-    if (ret <= 0)
-    {
-        SWSS_LOG_ERROR("HB Client failed to send REGISTER to HB server with error - %d", errno);
-    }
-    else
-    {
-        SWSS_LOG_NOTICE("HB Client registered successfully with the HB server");
-    }
+
+    registerWithServer();
 }
 
 HBClient::~HBClient()
@@ -99,6 +83,33 @@ HBClient::~HBClient()
 int HBClient::getFd()
 {
     return m_socket;
+}
+
+bool HBClient::clientRegistered()
+{
+    return m_registerStatus;
+}
+
+void HBClient::registerWithServer()
+{
+    ssize_t ret;
+    message.msg_type = HB_CLIENT_REGISTER;
+
+    do
+    {
+      ret = sendto(m_socket, (void *) &message, sizeof(message), 0,
+                   (struct sockaddr *) &server_sock_addr, sizeof(server_sock_addr));
+    }
+    while ((ret < 0) && (errno == EINTR));
+    if (ret <= 0)
+    {
+        SWSS_LOG_ERROR("HB Client failed to send REGISTER to HB server with error - %d", errno);
+    }
+    else
+    {
+        m_registerStatus = true;
+        SWSS_LOG_NOTICE("HB Client registered successfully with the HB server");
+    }
 }
 
 uint64_t HBClient::readData()
