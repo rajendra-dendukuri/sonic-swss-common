@@ -6,6 +6,7 @@
 #include "selectable.h"
 #include "common/logger.h"
 #include "hbclient.h"
+#include <string>
 
 using namespace swss;
 using namespace std;
@@ -14,7 +15,7 @@ using namespace std;
 hb_client_message_t message;
 static struct sockaddr_un client_sock_addr, server_sock_addr;
 
-HBClient::HBClient(string appName,
+HBClient::HBClient(std::string appName,
                    hb_client_sla_t sla) :
     Selectable(), m_appName(appName), m_socket(0), m_sla(sla)
 {
@@ -54,7 +55,7 @@ HBClient::HBClient(string appName,
     memset (&message, 0, sizeof(message));
     /* Send Register message */
     message.version = HB_VERSION_1_0;
-    strncpy(message.process_name, m_appName.c_str(), sizeof(message.process_name));
+    strncpy(message.process_name, m_appName.c_str(), sizeof(message.process_name)-1);
     message.process_pid = getpid();
     /* Fill the Client SLA */
     message.sla = m_sla;

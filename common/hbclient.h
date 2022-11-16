@@ -10,7 +10,7 @@ namespace swss {
 
 class HBClient : public Selectable {
 public:
-    HBClient(string appName,
+    HBClient(std::string appName,
              hb_client_sla_t sla);
     ~HBClient() override;
 
@@ -21,7 +21,7 @@ public:
 
 private:
 
-    string             m_appName;
+    std::string             m_appName;
     int32_t            m_socket;
     hb_client_sla_t    m_sla;
     //struct sockaddr_un client_sock_addr, server_sock_addr;
